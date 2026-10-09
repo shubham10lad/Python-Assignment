@@ -4,9 +4,6 @@ import datetime
 from google import genai
 
 
-
-
-# Initialize the Gemini API client
 client = genai.Client(api_key="AQ.Ab8RN6IchY-eZdwtvubIKZvO_gQLTnEMamhh7pHvaBcWZA_qQA")
 
 def log_status(filename, status, error="None"):
@@ -18,8 +15,8 @@ def log_status(filename, status, error="None"):
 
 def process_file(file_path):
     filename = os.path.basename(file_path)
+
     
-    # 1. Read and preprocess text
     with open(file_path, "r", encoding="utf-8") as f:
         text = f.read().strip()
     
@@ -30,7 +27,6 @@ def process_file(file_path):
 
     word_count = len(text.split())
 
-    # 2. Construct prompt requesting JSON format
     prompt = f"""
     Summarize the following text and respond ONLY with a valid JSON object.
     Do not include markdown tags like ```json or markdown formatting.
@@ -44,7 +40,6 @@ def process_file(file_path):
     {text}
     """
 
-    # 3. Call Gemini API
     try:
         response = client.models.generate_content(
             model="gemini-3.5-flash-lite",
@@ -60,17 +55,14 @@ def process_file(file_path):
         # 4. Safe JSON parsing
         data = json.loads(raw_text)
 
-        # 5. Validate required fields
         required_fields = ["title", "summary", "keywords"]
         for field in required_fields:
             if field not in data:
                 raise ValueError(f"Missing required field: {field}")
 
-        # Add the original word count
         data["word_count"] = word_count
         data["source_file"] = filename
 
-        # 6. Save result into output/summaries.json
         os.makedirs("output", exist_ok=True)
         
         with open("summaries.json", "a", encoding="utf-8") as out_file:
@@ -92,8 +84,7 @@ def main():
     if not os.path.exists(user_input):
         print("Invalid path. File or folder does not exist.")
         return
-
-    # Gather files to process
+        
     files_to_process = []
     if os.path.isfile(user_input) and user_input.endswith(".txt"):
         files_to_process.append(user_input)
@@ -106,7 +97,6 @@ def main():
         print("No .txt files found.")
         return
 
-    # Process files with progress output
     total = len(files_to_process)
     print(f"\nFound {total} file(s) to process.\n")
 
@@ -115,6 +105,6 @@ def main():
         process_file(file_path)
 
     print("\n Processing complete! Check 'output/summaries.json' and 'app.log'.")
-
+    
 if __name__ == "__main__":
     main()
